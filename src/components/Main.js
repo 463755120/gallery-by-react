@@ -23,11 +23,14 @@ function getRangeRandom(Min,Max){
 // 组件首字母大写
 var ImgFigure = React.createClass({
 	render:function(){
+		var styleObj ={};
+	    if(this.props.arrange.pos){
+	      styleObj = this.props.arrange.pos;
+	    }
 		return(
-				<figure className="img-figure">
+				<figure className="img-figure"  style={styleObj}>
 					<img src={this.props.data.imageURL}
-						 alt={this.props.data.title}		
-					/>
+						 alt={this.props.data.title}/>
 					<figcaption>
 						<h2 className="img-title">{this.props.data.title}</h2>
 					</figcaption>
@@ -38,24 +41,38 @@ var ImgFigure = React.createClass({
 })
 
 class AppComponent extends React.Component {
-	Constant:{
-		centerPos:{
+	constructor(props){
+    super(props);
+    this.state ={
+      imgsArrangeArr:[
+        {
+          pos:{
+            left:0,
+            top:0
+          },
+          rotate:0,
+          isInverse:false,
+          isCenter:false
+        }
+      ]
+    };
+
+    this.Constant= {
+        centerPos:{
           left:0,
           right:0
         },
-        // 水平方向的取值范围
         hPosRange:{
           leftSecX:[0,0],
           rightSecX:[0,0],
           y:[0,0]
         },
-        // 垂直方向的取值范围
         vPosRange:{
           x:[0,0],
           topY:[0,0]
         }
-
-	}
+      }
+  }
 	// 制定居中是哪张图片
 	center(index){
 		return function(){
@@ -65,11 +82,11 @@ class AppComponent extends React.Component {
 	// 组件加载后,为每张图计算加载的范围
 	componentDidMount(){
 		// 获得舞台大小
-		var stageDOM = React.findDOMNode(this.refs.stage),
-			stageW = stageDOM.scrollWidth,
-			stageH = stageDOM.scrollHeight,
-			halfStageW = Math.ceil(stageW / 2),
-			halfStageH = Math.ceil(stageH / 2);
+		var stageDom = ReactDOM.findDOMNode(this.refs.stage),
+		      stageW = stageDom.scrollWidth,
+		      stageH = stageDom.scrollHeight,
+		      halfStageW = Math.ceil(stageW / 2),
+		      halfStageH = Math.ceil(stageH / 2);
 		// 获取一个图片的大小
 		var imgFigureDom = ReactDOM.findDOMNode(this.refs.imgFigure0),
 		      imgW  =imgFigureDom.scrollWidth,
@@ -98,12 +115,17 @@ class AppComponent extends React.Component {
 
 		    this.rearrange(0);
 	}
-	inverse(index){
-		return function(){
-			// this.state用来读取对象的属性
-			var imgsArrangeArr = this.state.imgsArrangeArr;
-		}.bind(this);
-	}
+	 inverse(index){
+    return function(){
+      var imgsArrangeArr = this.state.imgsArrangeArr;
+      imgsArrangeArr[index].isInverse  = ! imgsArrangeArr[index].isInverse;
+      // this.setState 方法就修改状态值
+      this.setState({
+        imgsArrangeArr:imgsArrangeArr
+      });
+
+    }.bind(this);
+  }
 	//随机图片的位置
 	rearrange(centerIndex){
 		let imgsArrangeArr = this.state.imgsArrangeArr,
@@ -129,7 +151,7 @@ class AppComponent extends React.Component {
 			imgsArrangeTopArr = imgsArrangeArr.splice(topImgSpliceIndex,topImgNum);
 			// 布局位于上侧的图片
 			imgsArrangeTopArr.forEach(function (value,index){
-				imgsArrangeTopArrp[index].pos = {
+				imgsArrangeTopArr[index].pos = {
 					top:getRangeRandom(vPosRangeTopY[0],vPosRangeTopY[1]),
 					left:getRangeRandom(vPosRangeX[0],vPosRangeX[1])
 				}
@@ -151,7 +173,14 @@ class AppComponent extends React.Component {
 				      }
 
 				    }
-			}
+			if(imgsArrangeTopArr && imgsArrangeTopArr[0]){
+		      imgsArrangeArr.splice(topImgSpliceIndex,0,imgsArrangeTopArr[0]);
+		    }
+		    imgsArrangeArr.splice(centerIndex, 0, imgsArrangeCenterArr[0]);
+		    this.setState({
+		      imgsArrangeArr:imgsArrangeArr
+		    });
+  }
   
   render() {
     var controllerUnits = [],
@@ -163,9 +192,9 @@ class AppComponent extends React.Component {
     					left:0,
     					top:0
     				}
-    			}
+    			};
     		}
-    		imgFigures.push(<ImgFigure data={value} ref={'imgFigure'+index}/>)
+    		imgFigures.push(<ImgFigure data={value} ref={'imgFigure'+index} arrange={this.state.imgsArrangeArr[index]}/>)
     	}.bind(this))
     return (
      <section className="stage" ref="stage" >
