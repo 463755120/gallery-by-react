@@ -47,7 +47,7 @@ var ImgFigure = React.createClass({
 	    }
 	    var imgFigureClassName ='img-figure';
     	imgFigureClassName += this.props.arrange.isInverse ? ' is-inverse':''; 
-    	if(this.props.arrange.isCenter){
+   		if(this.props.arrange.isCenter){
 	      styleObj.zIndex =11;
 	    }
 		return(
@@ -64,6 +64,33 @@ var ImgFigure = React.createClass({
 						</div>
 					</figcaption>
 				</figure>
+			)
+	}
+})
+
+var ControllerUnit = React.createClass({
+	handleClick:function(e){
+		// 如果点击居中的图片就是为了反转
+		if (this.props.arrange.isCenter) {
+			this.props.inverse();
+		} else{
+			this.props.center();
+		}
+		e.preventDefault();
+    	e.stopPropagation();
+	},
+	render:function(){
+		var controllerUnitClassName="controller-unit";
+		// 如果对应的图片是居中态 类名之间加空格
+		if(this.props.arrange.isCenter){
+			controllerUnitClassName += " is-center";
+			// 居中且反转
+			if(this.props.arrange.isInverse){
+				controllerUnitClassName +=" is-inverse";
+			}
+		}
+		return (
+			<span  className={controllerUnitClassName} onClick = {this.handleClick}></span>
 			)
 	}
 })
@@ -238,7 +265,9 @@ class AppComponent extends React.Component {
     		// 给ImgFigure绑定这些有用的函数,否则调用不到,类似inverse,
     		// center
     		imgFigures.push(<ImgFigure data={value} ref={'imgFigure'+index} arrange={this.state.imgsArrangeArr[index]} inverse = {this.inverse(index)} center={this.center(index)}/>)
+    		controllerUnits.push(<ControllerUnit arrange={this.state.imgsArrangeArr[index]} inverse = {this.inverse(index)}center = {this.center(index)}/>)
     	}.bind(this))
+
     return (
      <section className="stage" ref="stage" >
         <section className="img-sec">
